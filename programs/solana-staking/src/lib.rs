@@ -24,6 +24,14 @@ pub mod solana_staking {
     pub fn add_plan(ctx: Context<AddPlanCtx>, ix: AddPlanIx) -> Result<()> {
         process_add_plan::handler(ctx, ix)
     }
+
+    pub fn stake(ctx: Context<StakeCtx>, ix: StakeIx) -> Result<()> {
+        process_stake::handler(ctx, ix)
+    }
+
+    pub fn unstake(ctx: Context<UnstakeCtx>, ix: UnstakeIx) -> Result<()> {
+        process_unstake::handler(ctx, ix)
+    }
 }
 
 #[derive(Accounts)]

@@ -1,14 +1,13 @@
 use {
-    crate::{constant::*, error::ContractError, state::*, utils::*},
+    crate::{constant::*, error::ContractError, state::*},
     anchor_lang::prelude::*,
     anchor_spl::token::{Mint, Token, TokenAccount, Transfer},
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct StakeIx {
-    pub amount: u64,
-    pub period: u64,
-    pub reward: u64,
+    stake_id: u64,
+    plan_index: u8,
 }
 
 #[derive(Accounts)]
@@ -17,53 +16,43 @@ pub struct StakeCtx<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    #[account(
+        mut,
+        seeds = [CONFIG_TAG],
+        bump,
+    )]
+    pub configuration: Box<Account<'info, Configuration>>,
+
+    #[account(
+        init,
+        payer = authority,
+        space = std::mem::size_of::<Stake>() + 8,
+        seeds = [STAKE_TAG, authority.key().as_ref(), &ix.stake_id.to_le_bytes()],
+        bump,
+    )]
+    pub stake: Box<Account<'info, Stake>>,
+
+    #[account(
+        constraint = token_mint.key() == configuration.token_mint @ ContractError::InvalidToken,
+    )]
     /// CHECK: we read this key only
-    pub deal_token_mint: Account<'info, Mint>,
+    pub token_mint: Account<'info, Mint>,
 
     #[account(
         mut,
-        seeds = [DEAL_TAG, deal_token_mint.key().as_ref()],
-        bump,
-        constraint = deal.get_deal_status(clock.unix_timestamp as u64) == DealStatus::Live @ ContractError::InvalidDealStatus
+      token::mint = token_mint,
+      token::authority = configuration,
+      seeds = [ TOKEN_VAULT_TAG, configuration.key().as_ref(), token_mint.key().as_ref()],
+      bump
     )]
-    pub deal: Box<Account<'info, Deal>>,
+    pub token_vault: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
-        token::mint = deal_token_mint,
-        token::authority = deal,
-        seeds = [ DEAL_TOKEN_VAULT_TAG, deal.key().as_ref()],
-        bump,
-    )]
-    pub deal_token_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        token::mint = deal_token_mint,
+        token::mint = token_mint,
         token::authority = authority,
     )]
-    pub user_deal_token_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        constraint = is_pubkey(&payment_token_mint.key(), PAYMENT_TOKEN_MINT) @ ContractError::InvalidPaymentTokenMint
-    )]
-    pub payment_token_mint: Account<'info, Mint>,
-
-    #[account(
-        mut,
-        token::mint = payment_token_mint,
-        token::authority = deal,
-        seeds = [ DEAL_PAYMENT_VAULT_TAG, deal.key().as_ref()],
-        bump,
-    )]
-    pub deal_payment_vault: Box<Account<'info, TokenAccount>>,
-
-    #[account(
-        mut,
-        token::mint = payment_token_mint,
-        token::authority = authority,
-    )]
-    pub user_payment_vault: Box<Account<'info, TokenAccount>>,
+    pub user_token_vault: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -71,76 +60,35 @@ pub struct StakeCtx<'info> {
     pub clock: Sysvar<'info, Clock>,
 }
 
-pub fn handler(ctx: Context<PurchaseDealCtx>, ix: PurchaseDealIx) -> Result<()> {
-    // TODO: calculate deal token price according to deal status and discounts by tier
-    let tier = ctx.accounts.deal.get_tier(ctx.accounts.clock.unix_timestamp as u64, ix.nft_counts, ix.is_whitelisted_user)?;
-    let price = ctx.accounts.deal.get_deal_token_price(tier)?;
+pub fn handler(ctx: Context<StakeCtx>, ix: StakeIx) -> Result<()> {
+    let plan_amount = {
+        let plan = &ctx.accounts.configuration.plans.get(ix.plan_index as usize)
+            .ok_or(ContractError::InvalidPlanIndex)?;
+        require!(plan.parcitipants == plan.limit, ContractError::PlanLimitExceed);
+        plan.amount
+    };
 
-    // deal_token_amount = (payment_token_amount / 10 ^ usdc_token_decimals) / (price / PRICE_DENOMINATOR) * 10 ^ deal_token_decimals
-    let deal_token_amount = (ix.amount as u128)
-        .safe_mul(
-            (10 as u128)
-                .safe_pow(ctx.accounts.deal.deal_token_decimals as u32)
-                .unwrap(),
-        )
-        .unwrap()
-        .safe_mul(PRICE_DENOMINATOR as u128)
-        .unwrap()
-        .safe_div(price as u128)
-        .unwrap()
-        .safe_div(
-            (10 as u128)
-                .safe_pow(ctx.accounts.deal.payment_token_decimals as u32)
-                .unwrap(),
-        )
-        .unwrap() as u64;
-
-    // check if  min_usdc <= amount <= max_usdc
-    require!(ix.amount >= ctx.accounts.deal.min_usdc_buy, ContractError::LessThanMinUSDC);
-    require!(ix.amount <= ctx.accounts.deal.max_usdc_buy, ContractError::MoreThanMaxUSDC);
-
-    // transfer payment token(USDC) to the contract
     anchor_spl::token::transfer(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Transfer {
-                from: ctx.accounts.user_payment_vault.to_account_info(),
-                to: ctx.accounts.deal_payment_vault.to_account_info(),
+                from: ctx.accounts.user_token_vault.to_account_info(),
+                to: ctx.accounts.token_vault.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info(),
             },
         ),
-        ix.amount,
+        plan_amount,
     )?;
 
-    // transfer deal token to the user's account
-    let deal_token_mint_key = ctx.accounts.deal_token_mint.key();
-    let signer_seeds = &[
-        DEAL_TAG,
-        deal_token_mint_key.as_ref(),
-        &[ctx.accounts.deal.bump],
-    ];
-    let signer = &[&signer_seeds[..]];
-    anchor_spl::token::transfer(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.deal_token_vault.to_account_info(),
-                to: ctx.accounts.user_deal_token_vault.to_account_info(),
-                authority: ctx.accounts.deal.to_account_info(),
-            },
-            signer,
-        ),
-        deal_token_amount,
-    )?;
+    let configuration = &mut ctx.accounts.configuration;
+    configuration.plans[ix.plan_index as usize].parcitipants += 1;
+    configuration.total += plan_amount;
 
-    // update ticket account info
-    ctx.accounts.ticket.purchase_payment_token_amount += ix.amount as u128;
-    ctx.accounts.ticket.purchase_deal_token_amount += deal_token_amount as u128;
-    ctx.accounts.ticket.updated_at = ctx.accounts.clock.unix_timestamp as u64;
-
-    // update deal account info
-    ctx.accounts.deal.purchase_payment_token_amount += ix.amount as u128;
-    ctx.accounts.deal.purchase_deal_token_amount += deal_token_amount as u128;
+    ctx.accounts.stake.bump = ctx.bumps.stake;
+    ctx.accounts.stake.authority = ctx.accounts.authority.key();
+    ctx.accounts.stake.stake_id = ix.stake_id;
+    ctx.accounts.stake.plan_index = ix.plan_index;
+    ctx.accounts.stake.staked_at = ctx.accounts.clock.unix_timestamp as u64;
 
     Ok(())
 }

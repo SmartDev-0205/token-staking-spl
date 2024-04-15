@@ -18,12 +18,11 @@ pub struct AddPlanCtx<'info> {
     pub authority: Signer<'info>,
 
     #[account(
-    mut,
-    seeds = [CONFIG_TAG],
-    bump,
-  )]
+        mut,
+        seeds = [CONFIG_TAG],
+        bump,
+    )]
     pub configuration: Box<Account<'info, Configuration>>,
-
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub clock: Sysvar<'info, Clock>,
