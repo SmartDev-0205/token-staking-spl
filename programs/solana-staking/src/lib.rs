@@ -20,8 +20,11 @@ pub mod solana_staking {
     pub fn initialize(ctx: Context<InitializeCtx>) -> Result<()> {
         process_initialize::handler(ctx)
     }
+
+    pub fn add_plan(ctx: Context<AddPlanCtx>, ix: AddPlanIx) -> Result<()> {
+        process_add_plan::handler(ctx, ix)
+    }
 }
 
 #[derive(Accounts)]
 pub struct Initialize {}
-
