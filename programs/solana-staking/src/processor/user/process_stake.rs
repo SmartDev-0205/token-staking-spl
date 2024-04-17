@@ -64,7 +64,9 @@ pub fn handler(ctx: Context<StakeCtx>, ix: StakeIx) -> Result<()> {
     let plan_amount = {
         let plan = &ctx.accounts.configuration.plans.get(ix.plan_index as usize)
             .ok_or(ContractError::InvalidPlanIndex)?;
-        require!(plan.parcitipants == plan.limit, ContractError::PlanLimitExceed);
+        msg!("limit {}", plan.limit);
+        msg!("parcitipants {}", plan.parcitipants);
+        require!(plan.parcitipants != plan.limit, ContractError::PlanLimitExceed);
         plan.amount
     };
 

@@ -63,7 +63,7 @@ pub fn handler(ctx: Context<UnstakeCtx>, ix: UnstakeIx) -> Result<()> {
     let reward_amount = {
         let plan = &ctx.accounts.configuration.plans.get(ix.plan_index as usize)
             .ok_or(ContractError::InvalidPlanIndex)?;
-        plan.reward
+        plan.reward + plan.amount
     };
 
     let lock_period = {

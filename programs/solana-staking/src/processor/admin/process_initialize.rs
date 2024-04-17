@@ -1,5 +1,5 @@
 use {
-    crate::{constant::*, error::ContractError, state::*},
+    crate::{constant::*, state::*},
     anchor_lang::prelude::*,
     anchor_spl::token::{Mint, Token, TokenAccount},
 };
@@ -18,7 +18,7 @@ pub struct InitializeCtx<'info> {
       space = std::mem::size_of::<Configuration>() + 8 + 10 * std::mem::size_of::<Plan>()
     )]
     pub configuration: Box<Account<'info, Configuration>>,
-    
+
     #[account()]
     /// CHECK: we read this key only
     pub token_mint: Account<'info, Mint>,
