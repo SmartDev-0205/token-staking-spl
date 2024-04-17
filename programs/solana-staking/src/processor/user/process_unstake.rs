@@ -61,24 +61,32 @@ pub struct UnstakeCtx<'info> {
 
 pub fn handler(ctx: Context<UnstakeCtx>, ix: UnstakeIx) -> Result<()> {
     let reward_amount = {
-        let plan = &ctx.accounts.configuration.plans.get(ix.plan_index as usize)
+        let plan = &ctx
+            .accounts
+            .configuration
+            .plans
+            .get(ix.plan_index as usize)
             .ok_or(ContractError::InvalidPlanIndex)?;
-        plan.reward + plan.amount
+        plan.reward
     };
 
     let lock_period = {
-        let plan = &ctx.accounts.configuration.plans.get(ix.plan_index as usize)
+        let plan = &ctx
+            .accounts
+            .configuration
+            .plans
+            .get(ix.plan_index as usize)
             .ok_or(ContractError::InvalidPlanIndex)?;
         plan.period
     };
 
     let current_time = ctx.accounts.clock.unix_timestamp as u64;
-    require!(lock_period + ctx.accounts.stake.staked_at > current_time, ContractError::InvalidUnstake);
-    
-    let signer_seeds = &[
-        CONFIG_TAG,
-        &[ctx.accounts.configuration.bump],
-    ];
+    require!(
+        lock_period + ctx.accounts.stake.staked_at > current_time,
+        ContractError::InvalidUnstake
+    );
+
+    let signer_seeds = &[CONFIG_TAG, &[ctx.accounts.configuration.bump]];
     let signer = &[&signer_seeds[..]];
 
     anchor_spl::token::transfer(
@@ -89,7 +97,7 @@ pub fn handler(ctx: Context<UnstakeCtx>, ix: UnstakeIx) -> Result<()> {
                 to: ctx.accounts.token_vault.to_account_info(),
                 authority: ctx.accounts.authority.to_account_info(),
             },
-            signer
+            signer,
         ),
         reward_amount,
     )?;
