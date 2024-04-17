@@ -82,7 +82,7 @@ pub fn handler(ctx: Context<UnstakeCtx>, ix: UnstakeIx) -> Result<()> {
 
     let current_time = ctx.accounts.clock.unix_timestamp as u64;
     require!(
-        lock_period + ctx.accounts.stake.staked_at > current_time,
+        current_time > lock_period + ctx.accounts.stake.staked_at,
         ContractError::InvalidUnstake
     );
 

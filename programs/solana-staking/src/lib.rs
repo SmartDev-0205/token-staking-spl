@@ -32,6 +32,10 @@ pub mod solana_staking {
     pub fn unstake(ctx: Context<UnstakeCtx>, ix: UnstakeIx) -> Result<()> {
         process_unstake::handler(ctx, ix)
     }
+
+    pub fn deposit(ctx: Context<DepositCtx>, ix: DepositIx) -> Result<()> {
+        process_deposit::handler(ctx, ix)
+    }
 }
 
 #[derive(Accounts)]
