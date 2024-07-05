@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+$mainColor: #dc3545;
+$background: 203 57.2% 3.76%;
+$foreground: 203 8.8% 97.35%;
+$--text-color: #3bd0d8;
+$--border-color: #58f3cd;
+$--bg-board-color: rgba(59, 208, 216, 0.2);
+$--bg-board-color-2: rgba(59, 208, 216, 0);
+
+@font-face {
+  font-family: "Grotesk";
+  src: url("../fonts/SpaceGrotesk-Regular.ttf") format("ttf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Grotesk";
+  src: url("../fonts/SpaceGrotesk-Regular.ttf") format("ttf");
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* ------ Custom Scroll bar -------- */
+
+/* width */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #292524;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #57534e;
+  border-radius: 9999px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #57534e;
+}
+
+/* --------------------------------- */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.modal-token-item {
+  display: grid;
+  cursor: pointer;
+  grid-template-columns: 40px minmax(auto, 1fr);
+  align-items: center;
+  -moz-column-gap: 1rem;
+  column-gap: 1rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.5rem;
+
+  .disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+body {
+  background-color: hsl($background);
+  color: hsl($foreground);
+  font-family: Grotesk;
+}
+
+.connect-wallet {
+  background-image: linear-gradient(
+    280deg,
+    rgb(183, 118, 255) 0%,
+    rgb(93, 216, 190) 100%
+  );
+  &:hover {
+    transform: scale(1.025);
+  }
+}
+.shadow-sm {
+  --tw-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.svg {
+  position: fixed;
+  z-index: 1;
+}
+
+.green {
+  right: -30%;
+  top: -30%;
+}
+
+.red {
+  bottom: -40%;
+  right: 10%;
+}
+
+.pink {
+  top: -30%;
+  left: -30%;
+}
+
+.card-gradient {
+  background-image: linear-gradient(
+      140.14deg,
+      rgba(0, 182, 191, 0.15),
+      rgba(27, 22, 89, 0.1) 86.61%
+    ),
+    linear-gradient(321.82deg, #18134d, #1b1659);
+}
+.button-color {
+  color: #3bd0d8;
+  background: linear-gradient(
+    162deg,
+    rgba(59, 208, 216, 0.2) 28.7%,
+    rgba(59, 208, 216, 0.2)
+  );
+  :hover {
+    transform: scale(1.025);
+  }
+}
+
+.connect-wallet {
+  background: linear-gradient(
+      245.22deg,
+      rgb(218, 46, 239),
+      rgb(43, 106, 255),
+      rgb(91, 116, 117)
+    )
+    0% center / 200% 100%;
+  color: #3bd0d8;
+}
