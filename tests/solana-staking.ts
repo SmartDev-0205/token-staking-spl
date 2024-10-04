@@ -27,15 +27,7 @@ const rent = anchor.web3.SYSVAR_RENT_PUBKEY;
 const clock = anchor.web3.SYSVAR_CLOCK_PUBKEY;
 
 
-const pepeTokenMint = new anchor.web3.PublicKey("Aq36ngTDYx6YyM8UnuTnDSTkNXjqZ4mo6eXTgVzpCpP2");
-
-// const defaults = {
-//   tokenProgram,
-//   systemProgram,
-//   rent,
-//   clock,
-// };
-
+const pepeTokenMint = new anchor.web3.PublicKey("9Gz7Gy3PwPuV1kmKUd617vdEed6eSg8zxfPsGGF1kjT4");
 
 export const pda = (
   seeds: (Buffer | Uint8Array)[],
@@ -55,32 +47,127 @@ describe("solana-staking", () => {
   const program = anchor.workspace.SolanaStaking as Program<SolanaStaking>;
 
   it("Is initialized!", async () => {
-    
+
     const configPDA = await pda([configSeed], program.programId);
     const token_valutPDA = await pda([valutSeed, configPDA.toBuffer(), pepeTokenMint.toBuffer()], program.programId);
     const stakeId = new anchor.BN(1713334646);
     const stake = pda([stakeSeed, provider.wallet.publicKey.toBuffer(), stakeId.toArrayLike(Buffer, 'le', 8)], program.programId);
     const userTokenVault = getAssociatedTokenAddressSync(pepeTokenMint, provider.wallet.publicKey);
 
-    console.log("program id",program.programId)
-    console.log("wallet id",provider.wallet.publicKey)
-    console.log("user token id",userTokenVault.toString())
+    console.log("program id", program.programId)
+    console.log("wallet id", provider.wallet.publicKey)
+    console.log("user token id", userTokenVault.toString())
 
-    
-    const txid = await program.methods.stake({stakeId, planIndex: 0}).accounts({
+    await program.methods.initialize().accounts({
       authority: provider.wallet.publicKey,
       configuration: configPDA,
-      stake,
       tokenMint: pepeTokenMint,
       tokenVault: token_valutPDA,
-      userTokenVault,
       tokenProgram,
       systemProgram,
       rent,
       clock
-    }).rpc({skipPreflight: true});
+    }).rpc({ skipPreflight: true });
 
-    console.log(txid);
+    // console.log("initialize was finished.");
+
+
+    // const txid = await program.methods.addPlan({
+    //   amount: new anchor.BN(500000000000000),
+    //   period: new anchor.BN(30 * 24 * 3600),
+    //   reward: new anchor.BN(539583000000000),
+    //   limit: 80 // Assuming limit is correctly typed as u8
+    // }).accounts({
+    //   authority: provider.wallet.publicKey,
+    //   configuration: configPDA,
+    //   systemProgram,
+    //   rent,
+    //   clock
+    // }).rpc({ skipPreflight: true });
+
+    // await program.methods.addPlan({
+    //   amount: new anchor.BN(1000000000000000),
+    //   period: new anchor.BN(60 * 24 * 3600),
+    //   reward: new anchor.BN(1108333000000000),
+    //   limit: 70 // Assuming limit is correctly typed as u8
+    // }).accounts({
+    //   authority: provider.wallet.publicKey,
+    //   configuration: configPDA,
+    //   systemProgram,
+    //   rent,
+    //   clock
+    // }).rpc({ skipPreflight: true });
+
+
+    // await program.methods.addPlan({
+    //   amount: new anchor.BN(2000000000000000),
+    //   period: new anchor.BN(60 * 24 * 3600),
+    //   reward: new anchor.BN(2250000000000000),
+    //   limit: 60 // Assuming limit is correctly typed as u8
+    // }).accounts({
+    //   authority: provider.wallet.publicKey,
+    //   configuration: configPDA,
+    //   systemProgram,
+    //   rent,
+    //   clock
+    // }).rpc({ skipPreflight: true });
+
+
+    // await program.methods.addPlan({
+    //   amount: new anchor.BN(3000000000000000),
+    //   period: new anchor.BN(180 * 24 * 3600),
+    //   reward: new anchor.BN(3525000000000000),
+    //   limit: 50 // Assuming limit is correctly typed as u8
+    // }).accounts({
+    //   authority: provider.wallet.publicKey,
+    //   configuration: configPDA,
+    //   systemProgram,
+    //   rent,
+    //   clock
+    // }).rpc({ skipPreflight: true });
+
+
+    await program.methods.addPlan({
+      amount: new anchor.BN(4000000000000000),
+      period: new anchor.BN(270 * 24 * 3600),
+      reward: new anchor.BN(4750000000000000),
+      limit: 40 // Assuming limit is correctly typed as u8
+    }).accounts({
+      authority: provider.wallet.publicKey,
+      configuration: configPDA,
+      systemProgram,
+      rent,
+      clock
+    }).rpc({ skipPreflight: true });
+
+
+    await program.methods.addPlan({
+      amount: new anchor.BN(5000000000000000),
+      period: new anchor.BN(360 * 24 * 3600),
+      reward: new anchor.BN(6000000000000000),
+      limit: 30 // Assuming limit is correctly typed as u8
+    }).accounts({
+      authority: provider.wallet.publicKey,
+      configuration: configPDA,
+      systemProgram,
+      rent,
+      clock
+    }).rpc({ skipPreflight: true });
+
+
+    // const txid = await program.methods.stake({ stakeId, planIndex: 0 }).accounts({
+    //   authority: provider.wallet.publicKey,
+    //   configuration: configPDA,
+    //   stake,
+    //   tokenMint: pepeTokenMint,
+    //   tokenVault: token_valutPDA,
+    //   userTokenVault,
+    //   tokenProgram,
+    //   systemProgram,
+    //   rent,
+    //   clock
+    // }).rpc({ skipPreflight: true });
+
+    // console.log(txid);
   });
 });
-  

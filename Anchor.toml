@@ -1,16 +1,13 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-solana_staking = "2ZkiQskVMEkFRKpQRuYCVdKXEkJ1U9msuJt3ChtrzVsF"
-
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
-wallet = "/home/ubuntu/.config/solana/id.json"
-solana_staking = "2ZkiQskVMEkFRKpQRuYCVdKXEkJ1U9msuJt3ChtrzVsF"
+cluster = "https://api.devnet.solana.com"
+wallet = "/home/odmin/.config/solana/id.json"
+solana_staking = "H3cmPZAUreUhda26mHpBg7TxXs7WzVB2BMERCmig3FSW"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
